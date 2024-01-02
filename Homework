@@ -1,0 +1,98 @@
+import cv2
+import numpy as np
+from matplotlib import pyplot as plt
+
+#Kod kullanılmadan önce, 'your_image.jpg' kısmı kendi resminizin dosya adı ile değiştirilir.
+
+# Resmi oku
+img = cv2.imread('your_image.jpg')
+
+# Normalizasyon
+normalized_img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
+
+# Standardizasyon
+mean, std = cv2.meanStdDev(img)
+standardized_img = (img - mean) / std
+
+# Bit Plane Slicing
+def bit_plane_slice(img, bit):
+    return (img >> bit) & 1
+
+bit_plane_img = bit_plane_slice(img, 7)  # Örneğin, en yüksek biti al
+
+# Histogram Eşitleme
+gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+equalized_img = cv2.equalizeHist(gray_img)
+
+# Contrast Stretching
+min_intensity, max_intensity = 100, 200
+contrast_stretched_img = np.clip((img - min_intensity) * 255 / (max_intensity - min_intensity), 0, 255).astype(np.uint8)
+
+# Gamma
+gamma = 1.5
+gamma_corrected_img = np.power(img / 255.0, gamma) * 255.0
+
+# Ortalama Filtresi
+average_filtered_img = cv2.blur(img, (5, 5))  # 5x5 ortalama filtresi
+
+# Gaussian Filtresi
+gaussian_filtered_img = cv2.GaussianBlur(img, (5, 5), 0)  # 5x5 Gaussian filtresi
+
+# Sobel Filtresi
+sobel_filtered_img_x = cv2.Sobel(gray_img, cv2.CV_64F, 1, 0, ksize=5)
+sobel_filtered_img_y = cv2.Sobel(gray_img, cv2.CV_64F, 0, 1, ksize=5)
+sobel_filtered_img = np.sqrt(sobel_filtered_img_x**2 + sobel_filtered_img_y**2)
+
+# Blurring Operation with Laplace
+laplacian_img = cv2.Laplacian(img, cv2.CV_64F)
+
+# Smoothing
+smoothed_img = cv2.medianBlur(img, 5)
+
+# Sharpening
+sharpened_img = cv2.filter2D(img, -1, np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]]))
+
+# Gaussian Blurring
+gaussian_blurred_img = cv2.GaussianBlur(img, (5, 5), 0)
+
+# Salt and Pepper
+salt_and_pepper_img = img.copy()
+salt_and_pepper_img[np.random.rand(*img.shape) < 0.02] = 0  # 2% oranında siyah
+salt_and_pepper_img[np.random.rand(*img.shape) < 0.02] = 255  # 2% oranında beyaz
+
+# Contraharmonic Mean
+Q = 1.5
+contraharmonic_mean_img = cv2.filter2D(img, -1, (Q + 2) * np.power(img, Q) - Q * np.power(img, Q - 1))
+
+# RGB Bölütlenme
+b, g, r = cv2.split(img)
+
+# Açma - Kapama İşlemleri (Morphological Operations)
+kernel = np.ones((5, 5), np.uint8)
+opening_img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+closing_img = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
+
+# İşlenmiş resimleri göster
+plt.figure(figsize=(15, 10))
+
+plt.subplot(4, 5, 1), plt.imshow(img[...,::-1]), plt.title('Original Image')
+plt.subplot(4, 5, 2), plt.imshow(normalized_img[...,::-1]), plt.title('Normalized Image')
+plt.subplot(4, 5, 3), plt.imshow(standardized_img[...,::-1]), plt.title('Standardized Image')
+plt.subplot(4, 5, 4), plt.imshow(bit_plane_img, cmap='gray'), plt.title('Bit Plane Slicing')
+plt.subplot(4, 5, 5), plt.imshow(equalized_img, cmap='gray'), plt.title('Equalized Image')
+plt.subplot(4, 5, 6), plt.imshow(contrast_stretched_img[...,::-1]), plt.title('Contrast Stretched Image')
+plt.subplot(4, 5, 7), plt.imshow(gamma_corrected_img[...,::-1]), plt.title('Gamma Corrected Image')
+plt.subplot(4, 5, 8), plt.imshow(average_filtered_img[...,::-1]), plt.title('Average Filtered Image')
+plt.subplot(4, 5, 9), plt.imshow(gaussian_filtered_img[...,::-1]), plt.title('Gaussian Filtered Image')
+plt.subplot(4, 5, 10), plt.imshow(sobel_filtered_img, cmap='gray'), plt.title('Sobel Filtered Image')
+plt.subplot(4, 5, 11), plt.imshow(laplacian_img[...,::-1]), plt.title('Blurring with Laplace')
+plt.subplot(4, 5, 12), plt.imshow(smoothed_img[...,::-1]), plt.title('Smoothed Image')
+plt.subplot(4, 5, 13), plt.imshow(sharpened_img[...,::-1]), plt.title('Sharpened Image')
+plt.subplot(4, 5, 14), plt.imshow(gaussian_blurred_img[...,::-1]), plt.title('Gaussian Blurred Image')
+plt.subplot(4, 5, 15), plt.imshow(salt_and_pepper_img[...,::-1]), plt.title('Salt and Pepper Image')
+plt.subplot(4, 5, 16), plt.imshow(contraharmonic_mean_img[...,::-1]), plt.title('Contraharmonic Mean Image')
+plt.subplot(4, 5, 17), plt.imshow(cv2.merge([r, g, b])[...,::-1]), plt.title('RGB Channel Splitting')
+plt.subplot(4, 5, 18), plt.imshow(opening_img[...,::-1]), plt.title('Opening Image')
+plt.subplot(4, 5, 19), plt.imshow(closing_img[...,::-1]), plt.title('Closing Image')
+
+plt.show()
